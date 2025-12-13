@@ -1,0 +1,246 @@
+import { useState } from "react";
+import { TableWithStatus, Reservation } from "@/types/reservation";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Users, Calendar, Clock, X } from "lucide-react";
+import { toast } from "sonner";
+
+interface ReservationModalProps {
+  table: TableWithStatus | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onReserve: (reservation: Omit<Reservation, "id" | "createdAt">) => void;
+  onCancel: (reservationId: string) => void;
+  selectedDate: string;
+}
+
+export function ReservationModal({
+  table,
+  isOpen,
+  onClose,
+  onReserve,
+  onCancel,
+  selectedDate,
+}: ReservationModalProps) {
+  const [formData, setFormData] = useState({
+    guestName: "",
+    guestPhone: "",
+    guestEmail: "",
+    partySize: table?.seats || 2,
+    time: "19:00",
+    notes: "",
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!table) return;
+
+    onReserve({
+      tableId: table.id,
+      guestName: formData.guestName,
+      guestPhone: formData.guestPhone,
+      guestEmail: formData.guestEmail,
+      partySize: formData.partySize,
+      date: selectedDate,
+      time: formData.time,
+      notes: formData.notes,
+    });
+
+    toast.success(`Table ${table.number} reserved successfully!`);
+    onClose();
+    setFormData({
+      guestName: "",
+      guestPhone: "",
+      guestEmail: "",
+      partySize: table?.seats || 2,
+      time: "19:00",
+      notes: "",
+    });
+  };
+
+  const handleCancelReservation = () => {
+    if (!table?.currentReservation) return;
+    onCancel(table.currentReservation.id);
+    toast.success(`Reservation cancelled for Table ${table.number}`);
+    onClose();
+  };
+
+  if (!table) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md bg-card border-border">
+        <DialogHeader>
+          <DialogTitle className="font-display text-2xl flex items-center gap-2">
+            Table {table.number}
+            <span
+              className={`text-sm px-2 py-0.5 rounded-full ${
+                table.isReserved
+                  ? "bg-destructive/20 text-destructive"
+                  : "bg-success/20 text-success"
+              }`}
+            >
+              {table.isReserved ? "Reserved" : "Available"}
+            </span>
+          </DialogTitle>
+          <DialogDescription className="flex items-center gap-4 text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Users className="w-4 h-4" />
+              {table.seats} seats
+            </span>
+            <span className="flex items-center gap-1">
+              <Calendar className="w-4 h-4" />
+              {new Date(selectedDate).toLocaleDateString("en-US", {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
+          </DialogDescription>
+        </DialogHeader>
+
+        {table.isReserved && table.currentReservation ? (
+          <div className="space-y-4">
+            <div className="bg-secondary/50 p-4 rounded-lg space-y-3">
+              <h4 className="font-semibold text-foreground">Current Reservation</h4>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Guest:</span>
+                  <p className="font-medium">{table.currentReservation.guestName}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Time:</span>
+                  <p className="font-medium flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {table.currentReservation.time}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Party Size:</span>
+                  <p className="font-medium">{table.currentReservation.partySize} guests</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Phone:</span>
+                  <p className="font-medium">{table.currentReservation.guestPhone}</p>
+                </div>
+              </div>
+              {table.currentReservation.notes && (
+                <div>
+                  <span className="text-muted-foreground text-sm">Notes:</span>
+                  <p className="text-sm italic">{table.currentReservation.notes}</p>
+                </div>
+              )}
+            </div>
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={handleCancelReservation}
+            >
+              <X className="w-4 h-4 mr-2" />
+              Cancel Reservation
+            </Button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <Label htmlFor="guestName">Guest Name</Label>
+                <Input
+                  id="guestName"
+                  value={formData.guestName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, guestName: e.target.value })
+                  }
+                  placeholder="Enter guest name"
+                  required
+                  className="bg-secondary/50"
+                />
+              </div>
+              <div>
+                <Label htmlFor="guestPhone">Phone</Label>
+                <Input
+                  id="guestPhone"
+                  type="tel"
+                  value={formData.guestPhone}
+                  onChange={(e) =>
+                    setFormData({ ...formData, guestPhone: e.target.value })
+                  }
+                  placeholder="(555) 000-0000"
+                  required
+                  className="bg-secondary/50"
+                />
+              </div>
+              <div>
+                <Label htmlFor="guestEmail">Email</Label>
+                <Input
+                  id="guestEmail"
+                  type="email"
+                  value={formData.guestEmail}
+                  onChange={(e) =>
+                    setFormData({ ...formData, guestEmail: e.target.value })
+                  }
+                  placeholder="email@example.com"
+                  required
+                  className="bg-secondary/50"
+                />
+              </div>
+              <div>
+                <Label htmlFor="partySize">Party Size</Label>
+                <Input
+                  id="partySize"
+                  type="number"
+                  min={1}
+                  max={table.seats}
+                  value={formData.partySize}
+                  onChange={(e) =>
+                    setFormData({ ...formData, partySize: parseInt(e.target.value) })
+                  }
+                  required
+                  className="bg-secondary/50"
+                />
+              </div>
+              <div>
+                <Label htmlFor="time">Time</Label>
+                <Input
+                  id="time"
+                  type="time"
+                  value={formData.time}
+                  onChange={(e) =>
+                    setFormData({ ...formData, time: e.target.value })
+                  }
+                  required
+                  className="bg-secondary/50"
+                />
+              </div>
+              <div className="col-span-2">
+                <Label htmlFor="notes">Special Requests (Optional)</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) =>
+                    setFormData({ ...formData, notes: e.target.value })
+                  }
+                  placeholder="Any special requests or notes..."
+                  className="bg-secondary/50 resize-none"
+                  rows={2}
+                />
+              </div>
+            </div>
+            <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+              Confirm Reservation
+            </Button>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
