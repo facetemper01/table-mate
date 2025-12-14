@@ -22,6 +22,7 @@ interface ReservationModalProps {
   onUpdate: (reservationId: string, updates: Partial<Omit<Reservation, "id" | "createdAt">>) => void;
   onCancel: (reservationId: string) => void;
   selectedDate: string;
+  selectedTime: string;
 }
 
 export function ReservationModal({
@@ -32,6 +33,7 @@ export function ReservationModal({
   onUpdate,
   onCancel,
   selectedDate,
+  selectedTime,
 }: ReservationModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -57,7 +59,7 @@ export function ReservationModal({
         guestName: "",
         guestPhone: "",
         partySize: table?.seats || 2,
-        time: "19:00",
+        time: selectedTime,
         notes: "",
       });
     }
