@@ -14,7 +14,6 @@ export interface Reservation {
   tableId: string;
   guestName: string;
   guestPhone: string;
-  guestEmail: string;
   partySize: number;
   date: string;
   time: string;
