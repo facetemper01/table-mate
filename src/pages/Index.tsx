@@ -5,6 +5,7 @@ import { FloorPlan } from "@/components/restaurant/FloorPlan";
 import { ReservationModal } from "@/components/restaurant/ReservationModal";
 import { ReservationList } from "@/components/restaurant/ReservationList";
 import { DateSelector } from "@/components/restaurant/DateSelector";
+import { TimeSelector } from "@/components/restaurant/TimeSelector";
 import { useReservations } from "@/hooks/useReservations";
 import { TableWithStatus } from "@/types/reservation";
 import { MapPin, ClipboardList } from "lucide-react";
@@ -13,6 +14,8 @@ const Index = () => {
   const {
     selectedDate,
     setSelectedDate,
+    selectedTime,
+    setSelectedTime,
     getTablesWithStatus,
     addReservation,
     updateReservation,
@@ -39,14 +42,17 @@ const Index = () => {
       <Header />
 
       <main className="container mx-auto px-4 py-6">
-        {/* Date Selector & Stats */}
+        {/* Date & Time Selector & Stats */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6"
         >
-          <DateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} />
+          <div className="flex flex-wrap items-center gap-3">
+            <DateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} />
+            <TimeSelector selectedTime={selectedTime} onTimeChange={setSelectedTime} />
+          </div>
 
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 bg-success/10 text-success px-4 py-2 rounded-lg">
@@ -78,7 +84,7 @@ const Index = () => {
               selectedTable={selectedTable}
             />
             <p className="text-sm text-muted-foreground mt-3 font-body text-center">
-              Click on a table to make or view a reservation
+              Click on a table to make or view a reservation • Reservations are 1.5 hours
             </p>
           </motion.div>
 
@@ -114,6 +120,7 @@ const Index = () => {
         onUpdate={updateReservation}
         onCancel={cancelReservation}
         selectedDate={selectedDate}
+        selectedTime={selectedTime}
       />
     </div>
   );

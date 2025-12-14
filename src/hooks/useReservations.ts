@@ -2,6 +2,25 @@ import { useState, useCallback } from "react";
 import { Reservation, TableWithStatus } from "@/types/reservation";
 import { restaurantTables } from "@/data/tables";
 
+// Reservation duration in minutes (1.5 hours)
+const RESERVATION_DURATION = 90;
+
+// Helper to convert time string to minutes since midnight
+const timeToMinutes = (time: string): number => {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+};
+
+// Check if two time ranges overlap
+const timeRangesOverlap = (
+  start1: number,
+  end1: number,
+  start2: number,
+  end2: number
+): boolean => {
+  return start1 < end2 && end1 > start2;
+};
+
 // Sample initial reservations
 const initialReservations: Reservation[] = [
   {
@@ -54,19 +73,35 @@ export function useReservations() {
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
+  const [selectedTime, setSelectedTime] = useState<string>("19:00");
 
   const getTablesWithStatus = useCallback((): TableWithStatus[] => {
+    const selectedStartMinutes = timeToMinutes(selectedTime);
+    const selectedEndMinutes = selectedStartMinutes + RESERVATION_DURATION;
+
     return restaurantTables.map((table) => {
-      const reservation = reservations.find(
-        (r) => r.tableId === table.id && r.date === selectedDate
-      );
+      // Find any reservation that overlaps with the selected time window
+      const overlappingReservation = reservations.find((r) => {
+        if (r.tableId !== table.id || r.date !== selectedDate) return false;
+
+        const resStartMinutes = timeToMinutes(r.time);
+        const resEndMinutes = resStartMinutes + RESERVATION_DURATION;
+
+        return timeRangesOverlap(
+          selectedStartMinutes,
+          selectedEndMinutes,
+          resStartMinutes,
+          resEndMinutes
+        );
+      });
+
       return {
         ...table,
-        isReserved: !!reservation,
-        currentReservation: reservation,
+        isReserved: !!overlappingReservation,
+        currentReservation: overlappingReservation,
       };
     });
-  }, [reservations, selectedDate]);
+  }, [reservations, selectedDate, selectedTime]);
 
   const addReservation = useCallback((reservation: Omit<Reservation, "id" | "createdAt">) => {
     const newReservation: Reservation = {
@@ -101,6 +136,8 @@ export function useReservations() {
     reservations,
     selectedDate,
     setSelectedDate,
+    selectedTime,
+    setSelectedTime,
     getTablesWithStatus,
     addReservation,
     updateReservation,
