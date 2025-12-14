@@ -9,7 +9,6 @@ const initialReservations: Reservation[] = [
     tableId: "t2",
     guestName: "John Smith",
     guestPhone: "(555) 123-4567",
-    guestEmail: "john@example.com",
     partySize: 2,
     date: new Date().toISOString().split("T")[0],
     time: "19:00",
@@ -21,7 +20,6 @@ const initialReservations: Reservation[] = [
     tableId: "t5",
     guestName: "Sarah Johnson",
     guestPhone: "(555) 987-6543",
-    guestEmail: "sarah@example.com",
     partySize: 4,
     date: new Date().toISOString().split("T")[0],
     time: "20:00",
@@ -29,10 +27,9 @@ const initialReservations: Reservation[] = [
   },
   {
     id: "r3",
-    tableId: "t7",
+    tableId: "t17",
     guestName: "Business Group",
     guestPhone: "(555) 456-7890",
-    guestEmail: "corp@example.com",
     partySize: 6,
     date: new Date().toISOString().split("T")[0],
     time: "18:30",
@@ -41,10 +38,9 @@ const initialReservations: Reservation[] = [
   },
   {
     id: "r4",
-    tableId: "t12",
+    tableId: "t20",
     guestName: "Martinez Family",
     guestPhone: "(555) 321-0987",
-    guestEmail: "martinez@example.com",
     partySize: 8,
     date: new Date().toISOString().split("T")[0],
     time: "19:30",
@@ -82,6 +78,14 @@ export function useReservations() {
     return newReservation;
   }, []);
 
+  const updateReservation = useCallback((reservationId: string, updates: Partial<Omit<Reservation, "id" | "createdAt">>) => {
+    setReservations((prev) =>
+      prev.map((r) =>
+        r.id === reservationId ? { ...r, ...updates } : r
+      )
+    );
+  }, []);
+
   const cancelReservation = useCallback((reservationId: string) => {
     setReservations((prev) => prev.filter((r) => r.id !== reservationId));
   }, []);
@@ -99,6 +103,7 @@ export function useReservations() {
     setSelectedDate,
     getTablesWithStatus,
     addReservation,
+    updateReservation,
     cancelReservation,
     getReservationsForDate,
   };

@@ -15,6 +15,7 @@ const Index = () => {
     setSelectedDate,
     getTablesWithStatus,
     addReservation,
+    updateReservation,
     cancelReservation,
     getReservationsForDate,
   } = useReservations();
@@ -110,6 +111,7 @@ const Index = () => {
           setSelectedTable(null);
         }}
         onReserve={addReservation}
+        onUpdate={updateReservation}
         onCancel={cancelReservation}
         selectedDate={selectedDate}
       />

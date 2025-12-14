@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TableWithStatus, Reservation } from "@/types/reservation";
 import {
   Dialog,
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Users, Calendar, Clock, X } from "lucide-react";
+import { Users, Calendar, Clock, X, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 interface ReservationModalProps {
@@ -19,6 +19,7 @@ interface ReservationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onReserve: (reservation: Omit<Reservation, "id" | "createdAt">) => void;
+  onUpdate: (reservationId: string, updates: Partial<Omit<Reservation, "id" | "createdAt">>) => void;
   onCancel: (reservationId: string) => void;
   selectedDate: string;
 }
@@ -28,43 +29,75 @@ export function ReservationModal({
   isOpen,
   onClose,
   onReserve,
+  onUpdate,
   onCancel,
   selectedDate,
 }: ReservationModalProps) {
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     guestName: "",
     guestPhone: "",
-    guestEmail: "",
     partySize: table?.seats || 2,
     time: "19:00",
     notes: "",
   });
 
+  // Reset form when table changes or modal opens
+  useEffect(() => {
+    if (table?.currentReservation && isEditing) {
+      setFormData({
+        guestName: table.currentReservation.guestName,
+        guestPhone: table.currentReservation.guestPhone,
+        partySize: table.currentReservation.partySize,
+        time: table.currentReservation.time,
+        notes: table.currentReservation.notes || "",
+      });
+    } else if (!table?.isReserved) {
+      setFormData({
+        guestName: "",
+        guestPhone: "",
+        partySize: table?.seats || 2,
+        time: "19:00",
+        notes: "",
+      });
+    }
+  }, [table, isEditing]);
+
+  // Reset editing state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setIsEditing(false);
+    }
+  }, [isOpen]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!table) return;
 
-    onReserve({
-      tableId: table.id,
-      guestName: formData.guestName,
-      guestPhone: formData.guestPhone,
-      guestEmail: formData.guestEmail,
-      partySize: formData.partySize,
-      date: selectedDate,
-      time: formData.time,
-      notes: formData.notes,
-    });
+    if (isEditing && table.currentReservation) {
+      onUpdate(table.currentReservation.id, {
+        guestName: formData.guestName,
+        guestPhone: formData.guestPhone,
+        partySize: formData.partySize,
+        time: formData.time,
+        notes: formData.notes,
+      });
+      toast.success(`Reservation updated for Table ${table.number}`);
+      setIsEditing(false);
+    } else {
+      onReserve({
+        tableId: table.id,
+        guestName: formData.guestName,
+        guestPhone: formData.guestPhone,
+        partySize: formData.partySize,
+        date: selectedDate,
+        time: formData.time,
+        notes: formData.notes,
+      });
+      toast.success(`Table ${table.number} reserved successfully!`);
+    }
 
-    toast.success(`Table ${table.number} reserved successfully!`);
     onClose();
-    setFormData({
-      guestName: "",
-      guestPhone: "",
-      guestEmail: "",
-      partySize: table?.seats || 2,
-      time: "19:00",
-      notes: "",
-    });
   };
 
   const handleCancelReservation = () => {
@@ -74,7 +107,13 @@ export function ReservationModal({
     onClose();
   };
 
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
   if (!table) return null;
+
+  const showForm = !table.isReserved || isEditing;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -108,7 +147,7 @@ export function ReservationModal({
           </DialogDescription>
         </DialogHeader>
 
-        {table.isReserved && table.currentReservation ? (
+        {table.isReserved && table.currentReservation && !isEditing ? (
           <div className="space-y-4">
             <div className="bg-secondary/50 p-4 rounded-lg space-y-3">
               <h4 className="font-semibold text-foreground">Current Reservation</h4>
@@ -140,14 +179,24 @@ export function ReservationModal({
                 </div>
               )}
             </div>
-            <Button
-              variant="destructive"
-              className="w-full"
-              onClick={handleCancelReservation}
-            >
-              <X className="w-4 h-4 mr-2" />
-              Cancel Reservation
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={handleEditClick}
+              >
+                <Pencil className="w-4 h-4 mr-2" />
+                Edit Reservation
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={handleCancelReservation}
+              >
+                <X className="w-4 h-4 mr-2" />
+                Cancel
+              </Button>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -180,20 +229,6 @@ export function ReservationModal({
                 />
               </div>
               <div>
-                <Label htmlFor="guestEmail">Email</Label>
-                <Input
-                  id="guestEmail"
-                  type="email"
-                  value={formData.guestEmail}
-                  onChange={(e) =>
-                    setFormData({ ...formData, guestEmail: e.target.value })
-                  }
-                  placeholder="email@example.com"
-                  required
-                  className="bg-secondary/50"
-                />
-              </div>
-              <div>
                 <Label htmlFor="partySize">Party Size</Label>
                 <Input
                   id="partySize"
@@ -208,7 +243,7 @@ export function ReservationModal({
                   className="bg-secondary/50"
                 />
               </div>
-              <div>
+              <div className="col-span-2">
                 <Label htmlFor="time">Time</Label>
                 <Input
                   id="time"
@@ -235,9 +270,21 @@ export function ReservationModal({
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-              Confirm Reservation
-            </Button>
+            <div className="flex gap-2">
+              {isEditing && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setIsEditing(false)}
+                >
+                  Cancel Edit
+                </Button>
+              )}
+              <Button type="submit" className={`${isEditing ? 'flex-1' : 'w-full'} bg-primary text-primary-foreground hover:bg-primary/90`}>
+                {isEditing ? "Save Changes" : "Confirm Reservation"}
+              </Button>
+            </div>
           </form>
         )}
       </DialogContent>

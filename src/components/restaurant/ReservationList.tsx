@@ -1,7 +1,7 @@
 import { Reservation } from "@/types/reservation";
 import { restaurantTables } from "@/data/tables";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Users, Phone, Mail, MessageSquare, Trash2 } from "lucide-react";
+import { Clock, Users, Phone, MessageSquare, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -66,10 +66,6 @@ export function ReservationList({ reservations, onCancel }: ReservationListProps
                     <span className="flex items-center gap-1">
                       <Phone className="w-3 h-3" />
                       {reservation.guestPhone}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Mail className="w-3 h-3" />
-                      {reservation.guestEmail}
                     </span>
                   </div>
                   
