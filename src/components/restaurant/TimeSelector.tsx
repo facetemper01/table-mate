@@ -12,13 +12,15 @@ interface TimeSelectorProps {
   onTimeChange: (time: string) => void;
 }
 
-// Generate time slots from 11:00 to 22:00 in 30-minute intervals
+// Generate time slots from 11:00 to 22:00 in 15-minute intervals
 const generateTimeSlots = (): string[] => {
   const slots: string[] = [];
   for (let hour = 11; hour <= 22; hour++) {
     slots.push(`${hour.toString().padStart(2, "0")}:00`);
     if (hour < 22) {
+      slots.push(`${hour.toString().padStart(2, "0")}:15`);
       slots.push(`${hour.toString().padStart(2, "0")}:30`);
+      slots.push(`${hour.toString().padStart(2, "0")}:45`);
     }
   }
   return slots;

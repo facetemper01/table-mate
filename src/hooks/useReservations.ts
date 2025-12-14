@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
-import { Reservation, TableWithStatus } from "@/types/reservation";
-import { restaurantTables } from "@/data/tables";
+import { Reservation, TableWithStatus, Table } from "@/types/reservation";
+import { restaurantTables as defaultTables } from "@/data/tables";
 
 // Reservation duration in minutes (1.5 hours)
 const RESERVATION_DURATION = 90;
@@ -70,6 +70,7 @@ const initialReservations: Reservation[] = [
 
 export function useReservations() {
   const [reservations, setReservations] = useState<Reservation[]>(initialReservations);
+  const [tables, setTables] = useState<Table[]>(defaultTables);
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
@@ -79,7 +80,7 @@ export function useReservations() {
     const selectedStartMinutes = timeToMinutes(selectedTime);
     const selectedEndMinutes = selectedStartMinutes + RESERVATION_DURATION;
 
-    return restaurantTables.map((table) => {
+    return tables.map((table) => {
       // Find any reservation that overlaps with the selected time window
       const overlappingReservation = reservations.find((r) => {
         if (r.tableId !== table.id || r.date !== selectedDate) return false;
@@ -101,7 +102,7 @@ export function useReservations() {
         currentReservation: overlappingReservation,
       };
     });
-  }, [reservations, selectedDate, selectedTime]);
+  }, [reservations, tables, selectedDate, selectedTime]);
 
   const addReservation = useCallback((reservation: Omit<Reservation, "id" | "createdAt">) => {
     const newReservation: Reservation = {
@@ -132,8 +133,18 @@ export function useReservations() {
     [reservations]
   );
 
+  const updateTableSeats = useCallback((updates: { id: string; seats: number }[]) => {
+    setTables((prev) =>
+      prev.map((table) => {
+        const update = updates.find((u) => u.id === table.id);
+        return update ? { ...table, seats: update.seats } : table;
+      })
+    );
+  }, []);
+
   return {
     reservations,
+    tables,
     selectedDate,
     setSelectedDate,
     selectedTime,
@@ -143,5 +154,6 @@ export function useReservations() {
     updateReservation,
     cancelReservation,
     getReservationsForDate,
+    updateTableSeats,
   };
 }

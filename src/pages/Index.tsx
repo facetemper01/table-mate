@@ -6,12 +6,15 @@ import { ReservationModal } from "@/components/restaurant/ReservationModal";
 import { ReservationList } from "@/components/restaurant/ReservationList";
 import { DateSelector } from "@/components/restaurant/DateSelector";
 import { TimeSelector } from "@/components/restaurant/TimeSelector";
+import { EditLayoutModal } from "@/components/restaurant/EditLayoutModal";
 import { useReservations } from "@/hooks/useReservations";
 import { TableWithStatus } from "@/types/reservation";
-import { MapPin, ClipboardList } from "lucide-react";
+import { MapPin, ClipboardList, Settings2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const {
+    tables,
     selectedDate,
     setSelectedDate,
     selectedTime,
@@ -21,16 +24,18 @@ const Index = () => {
     updateReservation,
     cancelReservation,
     getReservationsForDate,
+    updateTableSeats,
   } = useReservations();
 
   const [selectedTable, setSelectedTable] = useState<TableWithStatus | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLayoutModalOpen, setIsLayoutModalOpen] = useState(false);
 
-  const tables = getTablesWithStatus();
+  const tablesWithStatus = getTablesWithStatus();
   const reservations = getReservationsForDate(selectedDate);
 
-  const availableCount = tables.filter((t) => !t.isReserved).length;
-  const reservedCount = tables.filter((t) => t.isReserved).length;
+  const availableCount = tablesWithStatus.filter((t) => !t.isReserved).length;
+  const reservedCount = tablesWithStatus.filter((t) => t.isReserved).length;
 
   const handleTableClick = (table: TableWithStatus) => {
     setSelectedTable(table);
@@ -74,12 +79,23 @@ const Index = () => {
             transition={{ delay: 0.2 }}
             className="lg:col-span-2"
           >
-            <div className="flex items-center gap-2 mb-4">
-              <MapPin className="w-5 h-5 text-primary" />
-              <h2 className="font-display text-xl font-semibold">Floor Plan</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-primary" />
+                <h2 className="font-display text-xl font-semibold">Floor Plan</h2>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsLayoutModalOpen(true)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Settings2 className="w-4 h-4 mr-1" />
+                Edit Layout
+              </Button>
             </div>
             <FloorPlan
-              tables={tables}
+              tables={tablesWithStatus}
               onTableClick={handleTableClick}
               selectedTable={selectedTable}
             />
@@ -121,6 +137,13 @@ const Index = () => {
         onCancel={cancelReservation}
         selectedDate={selectedDate}
         selectedTime={selectedTime}
+      />
+
+      <EditLayoutModal
+        tables={tables}
+        isOpen={isLayoutModalOpen}
+        onClose={() => setIsLayoutModalOpen(false)}
+        onSave={updateTableSeats}
       />
     </div>
   );
