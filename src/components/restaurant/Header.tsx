@@ -1,20 +1,20 @@
 import { UtensilsCrossed } from "lucide-react";
 import { motion } from "framer-motion";
-
 export function Header() {
-  return (
-    <motion.header
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50"
-    >
+  return <motion.header initial={{
+    opacity: 0,
+    y: -20
+  }} animate={{
+    opacity: 1,
+    y: 0
+  }} className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
             <UtensilsCrossed className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h1 className="font-display text-xl font-semibold text-foreground">
+            <h1 className="text-xl font-semibold text-foreground font-mono">
               La Maison
             </h1>
             <p className="text-xs text-muted-foreground font-body">
@@ -28,6 +28,5 @@ export function Header() {
           <span className="font-body">Open Now</span>
         </div>
       </div>
-    </motion.header>
-  );
+    </motion.header>;
 }
