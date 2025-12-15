@@ -7,6 +7,8 @@ export interface Table {
   shape: 'round' | 'square' | 'rectangle';
   width?: number;
   height?: number;
+  combinedWith?: string[]; // IDs of tables this is combined with
+  displayName?: string; // e.g., "5/6" for combined tables
 }
 
 export interface Reservation {

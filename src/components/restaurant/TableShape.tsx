@@ -55,11 +55,12 @@ export function TableShape({ table, onClick, isSelected }: TableShapeProps) {
     >
       <span
         className={cn(
-          "font-display font-semibold text-lg",
+          "font-display font-semibold",
+          table.displayName ? "text-base" : "text-lg",
           table.isReserved ? "text-destructive" : "text-success"
         )}
       >
-        {table.number}
+        {table.displayName || table.number}
       </span>
       <div
         className={cn(

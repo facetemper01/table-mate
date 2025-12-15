@@ -32,5 +32,6 @@ export const restaurantTables: Table[] = [
   
   // Large tables at back
   { id: "t20", number: 20, seats: 8, x: 480, y: 350, shape: "rectangle", width: 130, height: 65 },
-  { id: "t21", number: 21, seats: 10, x: 110, y: 440, shape: "rectangle", width: 180, height: 70 },
+  { id: "t21", number: 21, seats: 10, x: 80, y: 440, shape: "rectangle", width: 160, height: 65 },
+  { id: "t22", number: 22, seats: 10, x: 280, y: 440, shape: "rectangle", width: 160, height: 65 },
 ];

@@ -15,24 +15,8 @@ export function FloorPlan({ tables, onTableClick, selectedTable }: FloorPlanProp
       animate={{ opacity: 1 }}
       className="relative w-full h-[480px] bg-secondary/30 rounded-2xl border border-border overflow-hidden"
     >
-      {/* Restaurant layout decorations */}
+      {/* Grid pattern */}
       <div className="absolute inset-0 pointer-events-none">
-        {/* Entry */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-24 h-8 bg-primary/10 border-t-2 border-dashed border-primary/30 flex items-center justify-center">
-          <span className="text-xs text-muted-foreground font-body">Entry</span>
-        </div>
-        
-        {/* Kitchen area */}
-        <div className="absolute top-0 right-0 w-32 h-16 bg-muted/50 border-b border-l border-border rounded-bl-xl flex items-center justify-center">
-          <span className="text-xs text-muted-foreground font-body">Kitchen</span>
-        </div>
-        
-        {/* Bar area */}
-        <div className="absolute top-0 left-0 w-48 h-12 bg-muted/50 border-b border-r border-border rounded-br-xl flex items-center justify-center">
-          <span className="text-xs text-muted-foreground font-body">Bar</span>
-        </div>
-        
-        {/* Grid pattern */}
         <svg className="absolute inset-0 w-full h-full opacity-5" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">

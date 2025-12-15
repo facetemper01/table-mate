@@ -19,19 +19,26 @@ const Index = () => {
     selectedTime,
     setSelectedTime,
     getTablesWithStatus,
+    getVisibleTables,
     addReservation,
     updateReservation,
     cancelReservation,
     getReservationsForDate,
-    updateTableSeats
+    updateTableSeats,
+    combineTables,
+    uncombineTable,
   } = useReservations();
   const [selectedTable, setSelectedTable] = useState<TableWithStatus | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLayoutModalOpen, setIsLayoutModalOpen] = useState(false);
   const tablesWithStatus = getTablesWithStatus();
+  const visibleTables = getVisibleTables();
+  const visibleTablesWithStatus = tablesWithStatus.filter(t => 
+    visibleTables.some(vt => vt.id === t.id)
+  );
   const reservations = getReservationsForDate(selectedDate);
-  const availableCount = tablesWithStatus.filter(t => !t.isReserved).length;
-  const reservedCount = tablesWithStatus.filter(t => t.isReserved).length;
+  const availableCount = visibleTablesWithStatus.filter(t => !t.isReserved).length;
+  const reservedCount = visibleTablesWithStatus.filter(t => t.isReserved).length;
   const handleTableClick = (table: TableWithStatus) => {
     setSelectedTable(table);
     setIsModalOpen(true);
@@ -89,7 +96,7 @@ const Index = () => {
                 Edit Layout
               </Button>
             </div>
-            <FloorPlan tables={tablesWithStatus} onTableClick={handleTableClick} selectedTable={selectedTable} />
+            <FloorPlan tables={visibleTablesWithStatus} onTableClick={handleTableClick} selectedTable={selectedTable} />
             <p className="text-sm text-muted-foreground mt-3 font-body text-center">
               Click on a table to make or view a reservation • Reservations are 1.5 hours
             </p>
@@ -121,7 +128,7 @@ const Index = () => {
       setSelectedTable(null);
     }} onReserve={addReservation} onUpdate={updateReservation} onCancel={cancelReservation} selectedDate={selectedDate} selectedTime={selectedTime} />
 
-      <EditLayoutModal tables={tables} isOpen={isLayoutModalOpen} onClose={() => setIsLayoutModalOpen(false)} onSave={updateTableSeats} />
+      <EditLayoutModal tables={visibleTables} isOpen={isLayoutModalOpen} onClose={() => setIsLayoutModalOpen(false)} onSave={updateTableSeats} onCombineTables={combineTables} onUncombineTable={uncombineTable} />
     </div>;
 };
 export default Index;
