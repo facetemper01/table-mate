@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Users, Calendar, Clock, X, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
@@ -36,6 +37,7 @@ export function ReservationModal({
   selectedTime,
 }: ReservationModalProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isDropIn, setIsDropIn] = useState(false);
   const [formData, setFormData] = useState({
     guestName: "",
     guestPhone: "",
@@ -54,6 +56,7 @@ export function ReservationModal({
         time: table.currentReservation.time,
         notes: table.currentReservation.notes || "",
       });
+      setIsDropIn(table.currentReservation.guestName === "Drop-in");
     } else if (!table?.isReserved) {
       setFormData({
         guestName: "",
@@ -62,6 +65,7 @@ export function ReservationModal({
         time: selectedTime,
         notes: "",
       });
+      setIsDropIn(false);
     }
   }, [table, isEditing]);
 
@@ -69,6 +73,7 @@ export function ReservationModal({
   useEffect(() => {
     if (!isOpen) {
       setIsEditing(false);
+      setIsDropIn(false);
     }
   }, [isOpen]);
 
@@ -76,9 +81,11 @@ export function ReservationModal({
     e.preventDefault();
     if (!table) return;
 
+    const guestName = isDropIn ? "Drop-in" : formData.guestName;
+
     if (isEditing && table.currentReservation) {
       onUpdate(table.currentReservation.id, {
-        guestName: formData.guestName,
+        guestName,
         guestPhone: formData.guestPhone,
         partySize: formData.partySize,
         time: formData.time,
@@ -89,7 +96,7 @@ export function ReservationModal({
     } else {
       onReserve({
         tableId: table.id,
-        guestName: formData.guestName,
+        guestName,
         guestPhone: formData.guestPhone,
         partySize: formData.partySize,
         date: selectedDate,
@@ -203,21 +210,31 @@ export function ReservationModal({
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <Label htmlFor="guestName">Guest Name</Label>
-                <Input
-                  id="guestName"
-                  value={formData.guestName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, guestName: e.target.value })
-                  }
-                  placeholder="Enter guest name"
-                  required
-                  className="bg-secondary/50"
+              <div className="col-span-2 flex items-center gap-2">
+                <Checkbox
+                  id="dropIn"
+                  checked={isDropIn}
+                  onCheckedChange={(checked) => setIsDropIn(checked === true)}
                 />
+                <Label htmlFor="dropIn" className="cursor-pointer">Drop-in (walk-in guest)</Label>
               </div>
+              {!isDropIn && (
+                <div className="col-span-2">
+                  <Label htmlFor="guestName">Guest Name</Label>
+                  <Input
+                    id="guestName"
+                    value={formData.guestName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, guestName: e.target.value })
+                    }
+                    placeholder="Enter guest name"
+                    required
+                    className="bg-secondary/50"
+                  />
+                </div>
+              )}
               <div>
-                <Label htmlFor="guestPhone">Phone</Label>
+                <Label htmlFor="guestPhone">Phone (Optional)</Label>
                 <Input
                   id="guestPhone"
                   type="tel"
@@ -225,8 +242,7 @@ export function ReservationModal({
                   onChange={(e) =>
                     setFormData({ ...formData, guestPhone: e.target.value })
                   }
-                  placeholder="(555) 000-0000"
-                  required
+                  placeholder="+47 XXX XX XXX"
                   className="bg-secondary/50"
                 />
               </div>
