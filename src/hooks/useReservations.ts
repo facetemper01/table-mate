@@ -142,6 +142,69 @@ export function useReservations() {
     );
   }, []);
 
+  const combineTables = useCallback((tableIds: string[]) => {
+    if (tableIds.length < 2) return;
+
+    setTables((prev) => {
+      const tablesToCombine = prev.filter((t) => tableIds.includes(t.id));
+      const tableNumbers = tablesToCombine.map((t) => t.number).sort((a, b) => a - b);
+      const displayName = tableNumbers.join("/");
+      const totalSeats = tablesToCombine.reduce((sum, t) => sum + t.seats, 0);
+      
+      // Use the first table's position but update its properties
+      const primaryTableId = tableIds[0];
+      
+      return prev.map((table) => {
+        if (table.id === primaryTableId) {
+          return {
+            ...table,
+            combinedWith: tableIds.filter((id) => id !== primaryTableId),
+            displayName,
+            seats: totalSeats,
+          };
+        }
+        // Hide other combined tables by marking them
+        if (tableIds.includes(table.id) && table.id !== primaryTableId) {
+          return {
+            ...table,
+            combinedWith: [primaryTableId],
+            displayName: undefined,
+          };
+        }
+        return table;
+      });
+    });
+  }, []);
+
+  const uncombineTable = useCallback((tableId: string) => {
+    setTables((prev) => {
+      const table = prev.find((t) => t.id === tableId);
+      if (!table?.combinedWith) return prev;
+
+      const allCombinedIds = [tableId, ...table.combinedWith];
+      const originalTables = defaultTables.filter((t) => allCombinedIds.includes(t.id));
+
+      return prev.map((t) => {
+        const original = originalTables.find((ot) => ot.id === t.id);
+        if (original) {
+          return { ...original };
+        }
+        return t;
+      });
+    });
+  }, []);
+
+  // Filter out secondary combined tables from display
+  const getVisibleTables = useCallback((): Table[] => {
+    return tables.filter((table) => {
+      // If table has combinedWith and it's not the primary (no displayName), hide it
+      if (table.combinedWith && table.combinedWith.length > 0 && !table.displayName) {
+        return false;
+      }
+      return true;
+    });
+  }, [tables]);
+
   return {
     reservations,
     tables,
@@ -150,10 +213,13 @@ export function useReservations() {
     selectedTime,
     setSelectedTime,
     getTablesWithStatus,
+    getVisibleTables,
     addReservation,
     updateReservation,
     cancelReservation,
     getReservationsForDate,
     updateTableSeats,
+    combineTables,
+    uncombineTable,
   };
 }
