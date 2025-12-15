@@ -31,13 +31,16 @@ const timeSlots = generateTimeSlots();
 
 const getCurrentTimeRounded = (): string => {
   const now = new Date();
+  const hours = now.getHours();
   const minutes = now.getMinutes();
+  
+  // Round to nearest 15 minutes
   const roundedMinutes = Math.round(minutes / 15) * 15;
-  const hours = now.getHours() + (roundedMinutes === 60 ? 1 : 0);
+  const adjustedHours = hours + (roundedMinutes === 60 ? 1 : 0);
   const finalMinutes = roundedMinutes === 60 ? 0 : roundedMinutes;
   
   // Clamp to operating hours (11:00 - 22:00)
-  const clampedHours = Math.max(11, Math.min(22, hours));
+  const clampedHours = Math.max(11, Math.min(22, adjustedHours));
   const clampedMinutes = clampedHours === 22 ? 0 : finalMinutes;
   
   return `${clampedHours.toString().padStart(2, "0")}:${clampedMinutes.toString().padStart(2, "0")}`;
