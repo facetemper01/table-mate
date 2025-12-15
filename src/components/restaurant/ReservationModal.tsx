@@ -81,7 +81,7 @@ export function ReservationModal({
     e.preventDefault();
     if (!table) return;
 
-    const guestName = isDropIn ? "Drop-in" : formData.guestName;
+    const guestName = isDropIn && !formData.guestName.trim() ? "Drop-in" : formData.guestName || "Drop-in";
 
     if (isEditing && table.currentReservation) {
       onUpdate(table.currentReservation.id, {
@@ -218,21 +218,19 @@ export function ReservationModal({
                 />
                 <Label htmlFor="dropIn" className="cursor-pointer">Drop-in (walk-in guest)</Label>
               </div>
-              {!isDropIn && (
-                <div className="col-span-2">
-                  <Label htmlFor="guestName">Guest Name</Label>
-                  <Input
-                    id="guestName"
-                    value={formData.guestName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, guestName: e.target.value })
-                    }
-                    placeholder="Enter guest name"
-                    required
-                    className="bg-secondary/50"
-                  />
-                </div>
-              )}
+              <div className="col-span-2">
+                <Label htmlFor="guestName">Guest Name {isDropIn ? "(Optional)" : ""}</Label>
+                <Input
+                  id="guestName"
+                  value={formData.guestName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, guestName: e.target.value })
+                  }
+                  placeholder="Enter guest name"
+                  required={!isDropIn}
+                  className="bg-secondary/50"
+                />
+              </div>
               <div>
                 <Label htmlFor="guestPhone">Phone (Optional)</Label>
                 <Input
