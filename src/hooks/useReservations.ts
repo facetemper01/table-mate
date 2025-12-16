@@ -142,6 +142,22 @@ export function useReservations() {
     );
   }, []);
 
+  const updateTableShape = useCallback((tableId: string, shape: 'round' | 'square') => {
+    setTables((prev) =>
+      prev.map((table) =>
+        table.id === tableId ? { ...table, shape } : table
+      )
+    );
+  }, []);
+
+  const updateTablePosition = useCallback((tableId: string, x: number, y: number) => {
+    setTables((prev) =>
+      prev.map((table) =>
+        table.id === tableId ? { ...table, x, y } : table
+      )
+    );
+  }, []);
+
   const combineTables = useCallback((tableIds: string[]) => {
     if (tableIds.length < 2) return;
 
@@ -219,6 +235,8 @@ export function useReservations() {
     cancelReservation,
     getReservationsForDate,
     updateTableSeats,
+    updateTableShape,
+    updateTablePosition,
     combineTables,
     uncombineTable,
   };

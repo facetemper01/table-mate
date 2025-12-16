@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Header } from "@/components/restaurant/Header";
 import { FloorPlan } from "@/components/restaurant/FloorPlan";
+import { DraggableFloorPlan } from "@/components/restaurant/DraggableFloorPlan";
 import { ReservationModal } from "@/components/restaurant/ReservationModal";
 import { ReservationList } from "@/components/restaurant/ReservationList";
 import { DateSelector } from "@/components/restaurant/DateSelector";
@@ -11,6 +12,7 @@ import { useReservations } from "@/hooks/useReservations";
 import { TableWithStatus } from "@/types/reservation";
 import { MapPin, ClipboardList, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
 const Index = () => {
   const {
     tables,
@@ -25,12 +27,15 @@ const Index = () => {
     cancelReservation,
     getReservationsForDate,
     updateTableSeats,
+    updateTableShape,
+    updateTablePosition,
     combineTables,
     uncombineTable,
   } = useReservations();
   const [selectedTable, setSelectedTable] = useState<TableWithStatus | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLayoutModalOpen, setIsLayoutModalOpen] = useState(false);
+  const [isMovingTables, setIsMovingTables] = useState(false);
   const tablesWithStatus = getTablesWithStatus();
   const visibleTables = getVisibleTables();
   const visibleTablesWithStatus = tablesWithStatus.filter(t => 
@@ -96,10 +101,20 @@ const Index = () => {
                 Edit Layout
               </Button>
             </div>
-            <FloorPlan tables={visibleTablesWithStatus} onTableClick={handleTableClick} selectedTable={selectedTable} />
-            <p className="text-sm text-muted-foreground mt-3 font-body text-center">
-              Click on a table to make or view a reservation • Reservations are 1.5 hours
-            </p>
+            {isMovingTables ? (
+              <DraggableFloorPlan 
+                tables={visibleTables} 
+                onPositionChange={updateTablePosition}
+                onDone={() => setIsMovingTables(false)}
+              />
+            ) : (
+              <>
+                <FloorPlan tables={visibleTablesWithStatus} onTableClick={handleTableClick} selectedTable={selectedTable} />
+                <p className="text-sm text-muted-foreground mt-3 font-body text-center">
+                  Click on a table to make or view a reservation • Reservations are 1.5 hours
+                </p>
+              </>
+            )}
           </motion.div>
 
           {/* Reservations List */}
@@ -128,7 +143,16 @@ const Index = () => {
       setSelectedTable(null);
     }} onReserve={addReservation} onUpdate={updateReservation} onCancel={cancelReservation} selectedDate={selectedDate} selectedTime={selectedTime} />
 
-      <EditLayoutModal tables={visibleTables} isOpen={isLayoutModalOpen} onClose={() => setIsLayoutModalOpen(false)} onSave={updateTableSeats} onCombineTables={combineTables} onUncombineTable={uncombineTable} />
+      <EditLayoutModal 
+        tables={visibleTables} 
+        isOpen={isLayoutModalOpen} 
+        onClose={() => setIsLayoutModalOpen(false)} 
+        onSave={updateTableSeats} 
+        onCombineTables={combineTables} 
+        onUncombineTable={uncombineTable}
+        onShapeChange={updateTableShape}
+        onStartMoveTables={() => setIsMovingTables(true)}
+      />
     </div>;
 };
 export default Index;

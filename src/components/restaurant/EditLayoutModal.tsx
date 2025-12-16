@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Users, Save, Link2, Unlink } from "lucide-react";
+import { Users, Save, Link2, Unlink, Move, Circle, Square } from "lucide-react";
 import { toast } from "sonner";
 
 interface EditLayoutModalProps {
@@ -22,6 +22,8 @@ interface EditLayoutModalProps {
   onSave: (updates: { id: string; seats: number }[]) => void;
   onCombineTables: (tableIds: string[]) => void;
   onUncombineTable: (tableId: string) => void;
+  onShapeChange: (tableId: string, shape: 'round' | 'square') => void;
+  onStartMoveTables: () => void;
 }
 
 export function EditLayoutModal({
@@ -31,6 +33,8 @@ export function EditLayoutModal({
   onSave,
   onCombineTables,
   onUncombineTable,
+  onShapeChange,
+  onStartMoveTables,
 }: EditLayoutModalProps) {
   const [seatUpdates, setSeatUpdates] = useState<Record<string, number>>({});
   const [selectedForCombine, setSelectedForCombine] = useState<string[]>([]);
@@ -98,6 +102,16 @@ export function EditLayoutModal({
     return !isTableCombined(table);
   };
 
+  const handleMoveTables = () => {
+    onClose();
+    onStartMoveTables();
+  };
+
+  const handleShapeToggle = (table: Table) => {
+    const newShape = table.shape === 'round' ? 'square' : 'round';
+    onShapeChange(table.id, newShape);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md bg-card border-border">
@@ -107,9 +121,19 @@ export function EditLayoutModal({
             Edit Table Layout
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Adjust seats and combine tables for larger groups
+            Adjust seats, shapes, and combine tables
           </DialogDescription>
         </DialogHeader>
+
+        {/* Move Tables Button */}
+        <Button
+          variant="outline"
+          className="w-full gap-2"
+          onClick={handleMoveTables}
+        >
+          <Move className="w-4 h-4" />
+          Move Tables
+        </Button>
 
         {/* Combine Tables Section */}
         <div className="bg-secondary/30 p-3 rounded-lg space-y-2">
@@ -131,26 +155,36 @@ export function EditLayoutModal({
           </p>
         </div>
 
-        <ScrollArea className="max-h-[350px] pr-4">
+        <ScrollArea className="max-h-[300px] pr-4">
           <div className="space-y-3">
             {tables.map((table) => (
               <div
                 key={table.id}
                 className="flex items-center justify-between bg-secondary/50 p-3 rounded-lg"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   {canSelectForCombine(table) && (
                     <Checkbox
                       checked={selectedForCombine.includes(table.id)}
                       onCheckedChange={() => toggleTableSelection(table.id)}
                     />
                   )}
-                  <span className="bg-primary/20 text-primary px-2 py-1 rounded-lg text-sm font-semibold min-w-[70px] text-center">
-                    {table.displayName ? `Table ${table.displayName}` : `Table ${table.number}`}
+                  <span className="bg-primary/20 text-primary px-2 py-1 rounded-lg text-sm font-semibold min-w-[50px] text-center">
+                    {table.displayName || table.number}
                   </span>
-                  <span className="text-sm text-muted-foreground capitalize">
-                    {table.shape}
-                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleShapeToggle(table)}
+                    className="h-7 w-7 p-0"
+                    title={`Change to ${table.shape === 'round' ? 'square' : 'round'}`}
+                  >
+                    {table.shape === 'round' ? (
+                      <Circle className="w-4 h-4" />
+                    ) : (
+                      <Square className="w-4 h-4" />
+                    )}
+                  </Button>
                   {isTableCombined(table) && (
                     <Button
                       size="sm"

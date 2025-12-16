@@ -11,8 +11,8 @@ interface TableShapeProps {
 
 export function TableShape({ table, onClick, isSelected }: TableShapeProps) {
   const baseSize = 70;
-  const width = table.width || baseSize;
-  const height = table.height || baseSize;
+  const width = baseSize;
+  const height = baseSize;
 
   const getShapeClasses = () => {
     const baseClasses = cn(
