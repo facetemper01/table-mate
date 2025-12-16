@@ -165,6 +165,12 @@ export function useReservations() {
       // Use the first table's position but update its properties
       const primaryTableId = tableIds[0];
       
+      // Store original positions for all tables being combined
+      const originalPositions: Record<string, { x: number; y: number; seats: number; shape?: 'round' | 'square' | 'rectangle' }> = {};
+      tablesToCombine.forEach((t) => {
+        originalPositions[t.id] = { x: t.x, y: t.y, seats: t.seats, shape: t.shape };
+      });
+      
       return prev.map((table) => {
         if (table.id === primaryTableId) {
           return {
@@ -172,6 +178,7 @@ export function useReservations() {
             combinedWith: tableIds.filter((id) => id !== primaryTableId),
             displayName,
             seats: totalSeats,
+            originalPositions,
           };
         }
         // Hide other combined tables by marking them
@@ -193,12 +200,22 @@ export function useReservations() {
       if (!table?.combinedWith) return prev;
 
       const allCombinedIds = [tableId, ...table.combinedWith];
-      const originalTables = defaultTables.filter((t) => allCombinedIds.includes(t.id));
+      const originalPositions = table.originalPositions || {};
 
       return prev.map((t) => {
-        const original = originalTables.find((ot) => ot.id === t.id);
-        if (original) {
-          return { ...original };
+        if (allCombinedIds.includes(t.id)) {
+          const original = originalPositions[t.id];
+          const defaultTable = defaultTables.find((dt) => dt.id === t.id);
+          return {
+            ...t,
+            x: original?.x ?? defaultTable?.x ?? t.x,
+            y: original?.y ?? defaultTable?.y ?? t.y,
+            seats: original?.seats ?? defaultTable?.seats ?? t.seats,
+            shape: original?.shape ?? defaultTable?.shape ?? t.shape,
+            combinedWith: undefined,
+            displayName: undefined,
+            originalPositions: undefined,
+          };
         }
         return t;
       });
