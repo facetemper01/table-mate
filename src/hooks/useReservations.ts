@@ -1,6 +1,12 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Reservation, TableWithStatus, Table } from "@/types/reservation";
 import { restaurantTables as defaultTables } from "@/data/tables";
+
+// LocalStorage keys
+const STORAGE_KEYS = {
+  RESERVATIONS: "restaurant_reservations",
+  TABLES: "restaurant_tables",
+};
 
 // Reservation duration in minutes (1.5 hours)
 const RESERVATION_DURATION = 90;
@@ -21,60 +27,49 @@ const timeRangesOverlap = (
   return start1 < end2 && end1 > start2;
 };
 
-// Sample initial reservations
-const initialReservations: Reservation[] = [
-  {
-    id: "r1",
-    tableId: "t2",
-    guestName: "John Smith",
-    guestPhone: "(555) 123-4567",
-    partySize: 2,
-    date: new Date().toISOString().split("T")[0],
-    time: "19:00",
-    notes: "Anniversary dinner",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "r2",
-    tableId: "t5",
-    guestName: "Sarah Johnson",
-    guestPhone: "(555) 987-6543",
-    partySize: 4,
-    date: new Date().toISOString().split("T")[0],
-    time: "20:00",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "r3",
-    tableId: "t17",
-    guestName: "Business Group",
-    guestPhone: "(555) 456-7890",
-    partySize: 6,
-    date: new Date().toISOString().split("T")[0],
-    time: "18:30",
-    notes: "Corporate dinner - wine pairing requested",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "r4",
-    tableId: "t20",
-    guestName: "Martinez Family",
-    guestPhone: "(555) 321-0987",
-    partySize: 8,
-    date: new Date().toISOString().split("T")[0],
-    time: "19:30",
-    notes: "Birthday celebration",
-    createdAt: new Date().toISOString(),
-  },
-];
+// Load from localStorage with fallback
+const loadFromStorage = <T>(key: string, fallback: T): T => {
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error(`Error loading ${key} from localStorage:`, e);
+  }
+  return fallback;
+};
+
+// Save to localStorage
+const saveToStorage = <T>(key: string, data: T): void => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (e) {
+    console.error(`Error saving ${key} to localStorage:`, e);
+  }
+};
 
 export function useReservations() {
-  const [reservations, setReservations] = useState<Reservation[]>(initialReservations);
-  const [tables, setTables] = useState<Table[]>(defaultTables);
+  const [reservations, setReservations] = useState<Reservation[]>(() =>
+    loadFromStorage(STORAGE_KEYS.RESERVATIONS, [])
+  );
+  const [tables, setTables] = useState<Table[]>(() =>
+    loadFromStorage(STORAGE_KEYS.TABLES, defaultTables)
+  );
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
   const [selectedTime, setSelectedTime] = useState<string>("19:00");
+
+  // Persist reservations to localStorage
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.RESERVATIONS, reservations);
+  }, [reservations]);
+
+  // Persist tables to localStorage
+  useEffect(() => {
+    saveToStorage(STORAGE_KEYS.TABLES, tables);
+  }, [tables]);
 
   const getTablesWithStatus = useCallback((): TableWithStatus[] => {
     const selectedStartMinutes = timeToMinutes(selectedTime);
