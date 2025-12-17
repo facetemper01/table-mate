@@ -82,6 +82,15 @@ const translations: Translations = {
   "date": { en: "Date", no: "Dato" },
   "time": { en: "Time", no: "Tid" },
   "done": { en: "Done", no: "Ferdig" },
+  
+  // Deleted Reservations
+  "deletedReservations": { en: "Deleted Reservations", no: "Slettede reservasjoner" },
+  "deletedReservationsDesc": { en: "History of all cancelled and deleted reservations", no: "Historikk over alle avlyste og slettede reservasjoner" },
+  "noDeletedReservations": { en: "No deleted reservations", no: "Ingen slettede reservasjoner" },
+  "deletedAt": { en: "Deleted At", no: "Slettet" },
+  "clearLog": { en: "Clear Log", no: "Tøm logg" },
+  "viewDeletedReservations": { en: "View Deleted Reservations", no: "Se slettede reservasjoner" },
+  "logCleared": { en: "Log cleared", no: "Logg tømt" },
 };
 
 interface LanguageContextType {
