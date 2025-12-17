@@ -8,11 +8,12 @@ import { ReservationList } from "@/components/restaurant/ReservationList";
 import { DateSelector } from "@/components/restaurant/DateSelector";
 import { TimeSelector } from "@/components/restaurant/TimeSelector";
 import { EditLayoutModal } from "@/components/restaurant/EditLayoutModal";
+import { DeletedReservationsModal } from "@/components/restaurant/DeletedReservationsModal";
 import { useReservations } from "@/hooks/useReservations";
 import { useDeletedReservationsLog } from "@/hooks/useDeletedReservationsLog";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TableWithStatus, Table } from "@/types/reservation";
-import { MapPin, ClipboardList, Settings2, MoreVertical, Trash2, Download, Eye, EyeOff } from "lucide-react";
+import { MapPin, ClipboardList, Settings2, MoreVertical, Trash2, Eye, EyeOff, History, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -57,7 +58,7 @@ const Index = () => {
     loadTableLayout,
   } = useReservations();
   
-  const { logDeletedReservation, logDeletedReservations, downloadLog } = useDeletedReservationsLog();
+  const { deletedLog, logDeletedReservation, logDeletedReservations, downloadLog, clearLog } = useDeletedReservationsLog();
   
   const [selectedTable, setSelectedTable] = useState<TableWithStatus | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -65,6 +66,7 @@ const Index = () => {
   const [isMovingTables, setIsMovingTables] = useState(false);
   const [showAllReservations, setShowAllReservations] = useState(false);
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
+  const [isDeletedLogModalOpen, setIsDeletedLogModalOpen] = useState(false);
   
   const tablesWithStatus = getTablesWithStatus();
   const visibleTables = getVisibleTables();
@@ -99,6 +101,11 @@ const Index = () => {
 
   const handleLoadPreset = (presetTables: Table[]) => {
     loadTableLayout(presetTables);
+  };
+
+  const handleClearLog = () => {
+    clearLog();
+    toast.success(t("logCleared"));
   };
 
   return (
@@ -204,10 +211,15 @@ const Index = () => {
                     )}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setIsDeletedLogModalOpen(true)}>
+                    <History className="w-4 h-4 mr-2" />
+                    {t("viewDeletedReservations")}
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => downloadLog()}>
                     <Download className="w-4 h-4 mr-2" />
                     {t("downloadLog")}
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => setIsDeleteAllDialogOpen(true)}
                     className="text-destructive focus:text-destructive"
@@ -274,6 +286,14 @@ const Index = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DeletedReservationsModal
+        isOpen={isDeletedLogModalOpen}
+        onClose={() => setIsDeletedLogModalOpen(false)}
+        deletedReservations={deletedLog}
+        onDownload={downloadLog}
+        onClearLog={handleClearLog}
+      />
     </div>
   );
 };
