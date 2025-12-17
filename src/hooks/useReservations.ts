@@ -121,12 +121,20 @@ export function useReservations() {
     setReservations((prev) => prev.filter((r) => r.id !== reservationId));
   }, []);
 
+  const deleteAllReservations = useCallback(() => {
+    setReservations([]);
+  }, []);
+
   const getReservationsForDate = useCallback(
     (date: string) => {
       return reservations.filter((r) => r.date === date);
     },
     [reservations]
   );
+
+  const loadTableLayout = useCallback((newTables: Table[]) => {
+    setTables(newTables);
+  }, []);
 
   const updateTableSeats = useCallback((updates: { id: string; seats: number }[]) => {
     setTables((prev) =>
@@ -245,11 +253,13 @@ export function useReservations() {
     addReservation,
     updateReservation,
     cancelReservation,
+    deleteAllReservations,
     getReservationsForDate,
     updateTableSeats,
     updateTableShape,
     updateTablePosition,
     combineTables,
     uncombineTable,
+    loadTableLayout,
   };
 }
