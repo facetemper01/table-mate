@@ -96,7 +96,7 @@ export function DeletedReservationsModal({
                   <TableHead className="text-muted-foreground">{t("table")}</TableHead>
                   <TableHead className="text-muted-foreground">{t("guestName")}</TableHead>
                   <TableHead className="text-muted-foreground">{t("phone")}</TableHead>
-                  <TableHead className="text-muted-foreground">{t("partySize")}</TableHead>
+                  <TableHead className="text-muted-foreground">{t("numberOfGuests")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
