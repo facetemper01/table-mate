@@ -13,7 +13,7 @@ import { useReservations } from "@/hooks/useReservations";
 import { useDeletedReservationsLog } from "@/hooks/useDeletedReservationsLog";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TableWithStatus, Table, Reservation } from "@/types/reservation";
-import { MapPin, ClipboardList, Settings2, MoreVertical, Trash2, Eye, EyeOff, History, Download, Plus, X, Users } from "lucide-react";
+import { MapPin, ClipboardList, Settings2, MoreVertical, Trash2, Eye, EyeOff, History, Download, Plus, X, Users, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -65,6 +65,8 @@ const Index = () => {
     combineTables,
     uncombineTable,
     loadTableLayout,
+    undo,
+    canUndo,
   } = useReservations();
   
   const { deletedLog, logDeletedReservation, logDeletedReservations, downloadLog, clearLog } = useDeletedReservationsLog();
@@ -158,6 +160,15 @@ const Index = () => {
     setSwitchingReservationId(reservationId);
   };
 
+  const handleUndo = () => {
+    const success = undo();
+    if (success) {
+      toast.success(t("changeUndone"));
+    } else {
+      toast.info(t("noChangesToUndo"));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -219,6 +230,16 @@ const Index = () => {
           </div>
 
           <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleUndo}
+              disabled={!canUndo}
+              title={t("undoAction")}
+              className="h-10 w-10"
+            >
+              <Undo2 className="w-4 h-4" />
+            </Button>
             <div className="flex items-center gap-2 bg-success/10 text-success px-4 py-2 rounded-lg">
               <span className="text-2xl font-display font-bold">{availableCount}</span>
               <span className="text-sm font-body">{t("available")}</span>
@@ -355,6 +376,8 @@ const Index = () => {
         onCreatePending={handleCreatePendingReservation}
         selectedDate={selectedDate}
         selectedTime={selectedTime}
+        onDateChange={setSelectedDate}
+        onTimeChange={setSelectedTime}
       />
 
       <EditLayoutModal 

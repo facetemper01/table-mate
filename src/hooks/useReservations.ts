@@ -49,6 +49,11 @@ const saveToStorage = <T>(key: string, data: T): void => {
   }
 };
 
+interface ReservationHistoryEntry {
+  reservations: Reservation[];
+  action: string;
+}
+
 export function useReservations() {
   const [reservations, setReservations] = useState<Reservation[]>(() =>
     loadFromStorage(STORAGE_KEYS.RESERVATIONS, [])
@@ -60,6 +65,21 @@ export function useReservations() {
     new Date().toISOString().split("T")[0]
   );
   const [selectedTime, setSelectedTime] = useState<string>("19:00");
+  const [history, setHistory] = useState<ReservationHistoryEntry[]>([]);
+
+  const saveToHistory = useCallback((action: string) => {
+    setHistory(prev => [...prev.slice(-19), { reservations, action }]);
+  }, [reservations]);
+
+  const undo = useCallback(() => {
+    if (history.length === 0) return false;
+    const lastState = history[history.length - 1];
+    setReservations(lastState.reservations);
+    setHistory(prev => prev.slice(0, -1));
+    return true;
+  }, [history]);
+
+  const canUndo = history.length > 0;
 
   // Persist reservations to localStorage
   useEffect(() => {
@@ -100,6 +120,7 @@ export function useReservations() {
   }, [reservations, tables, selectedDate, selectedTime]);
 
   const addReservation = useCallback((reservation: Omit<Reservation, "id" | "createdAt">) => {
+    saveToHistory('add');
     const newReservation: Reservation = {
       ...reservation,
       id: `r${Date.now()}`,
@@ -107,23 +128,26 @@ export function useReservations() {
     };
     setReservations((prev) => [...prev, newReservation]);
     return newReservation;
-  }, []);
+  }, [saveToHistory]);
 
   const updateReservation = useCallback((reservationId: string, updates: Partial<Omit<Reservation, "id" | "createdAt">>) => {
+    saveToHistory('update');
     setReservations((prev) =>
       prev.map((r) =>
         r.id === reservationId ? { ...r, ...updates } : r
       )
     );
-  }, []);
+  }, [saveToHistory]);
 
   const cancelReservation = useCallback((reservationId: string) => {
+    saveToHistory('cancel');
     setReservations((prev) => prev.filter((r) => r.id !== reservationId));
-  }, []);
+  }, [saveToHistory]);
 
   const deleteAllReservations = useCallback(() => {
+    saveToHistory('deleteAll');
     setReservations([]);
-  }, []);
+  }, [saveToHistory]);
 
   const getReservationsForDate = useCallback(
     (date: string) => {
@@ -261,5 +285,7 @@ export function useReservations() {
     combineTables,
     uncombineTable,
     loadTableLayout,
+    undo,
+    canUndo,
   };
 }

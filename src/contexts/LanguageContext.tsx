@@ -99,6 +99,12 @@ const translations: Translations = {
   "time": { en: "Time", no: "Tid" },
   "done": { en: "Done", no: "Ferdig" },
   
+  // Undo
+  "undo": { en: "Undo", no: "Angre" },
+  "undoAction": { en: "Undo last change", no: "Angre siste endring" },
+  "changeUndone": { en: "Change undone", no: "Endring angret" },
+  "noChangesToUndo": { en: "No changes to undo", no: "Ingen endringer å angre" },
+  
   // Deleted Reservations
   "deletedReservations": { en: "Deleted Reservations", no: "Slettede reservasjoner" },
   "deletedReservationsDesc": { en: "History of all cancelled and deleted reservations", no: "Historikk over alle avlyste og slettede reservasjoner" },
