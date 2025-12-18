@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Header } from "@/components/restaurant/Header";
 import { FloorPlan } from "@/components/restaurant/FloorPlan";
 import { DraggableFloorPlan } from "@/components/restaurant/DraggableFloorPlan";
-import { ReservationModal } from "@/components/restaurant/ReservationModal";
+import { ReservationModal, PendingReservationModal } from "@/components/restaurant/ReservationModal";
 import { ReservationList } from "@/components/restaurant/ReservationList";
 import { DateSelector } from "@/components/restaurant/DateSelector";
 import { TimeSelector } from "@/components/restaurant/TimeSelector";
@@ -12,8 +12,8 @@ import { DeletedReservationsModal } from "@/components/restaurant/DeletedReserva
 import { useReservations } from "@/hooks/useReservations";
 import { useDeletedReservationsLog } from "@/hooks/useDeletedReservationsLog";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { TableWithStatus, Table } from "@/types/reservation";
-import { MapPin, ClipboardList, Settings2, MoreVertical, Trash2, Eye, EyeOff, History, Download } from "lucide-react";
+import { TableWithStatus, Table, Reservation } from "@/types/reservation";
+import { MapPin, ClipboardList, Settings2, MoreVertical, Trash2, Eye, EyeOff, History, Download, Plus, X, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -33,6 +33,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+
+interface PendingReservationData {
+  guestName: string;
+  guestPhone: string;
+  partySize: number;
+  time: string;
+  notes: string;
+  date: string;
+}
 
 const Index = () => {
   const { t } = useLanguage();
@@ -67,6 +76,9 @@ const Index = () => {
   const [showAllReservations, setShowAllReservations] = useState(false);
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
   const [isDeletedLogModalOpen, setIsDeletedLogModalOpen] = useState(false);
+  const [isPendingModalOpen, setIsPendingModalOpen] = useState(false);
+  const [pendingReservation, setPendingReservation] = useState<PendingReservationData | null>(null);
+  const [switchingReservationId, setSwitchingReservationId] = useState<string | null>(null);
   
   const tablesWithStatus = getTablesWithStatus();
   const visibleTables = getVisibleTables();
@@ -78,7 +90,36 @@ const Index = () => {
   const availableCount = visibleTablesWithStatus.filter(t => !t.isReserved).length;
   const reservedCount = visibleTablesWithStatus.filter(t => t.isReserved).length;
   
+  const switchingReservation = switchingReservationId 
+    ? reservations.find(r => r.id === switchingReservationId) 
+    : null;
+  
   const handleTableClick = (table: TableWithStatus) => {
+    // If we have a pending reservation, assign it to this table
+    if (pendingReservation && !table.isReserved) {
+      addReservation({
+        tableId: table.id,
+        guestName: pendingReservation.guestName,
+        guestPhone: pendingReservation.guestPhone,
+        partySize: pendingReservation.partySize,
+        date: pendingReservation.date,
+        time: pendingReservation.time,
+        notes: pendingReservation.notes,
+      });
+      toast.success(t("reservationAssigned", { table: table.displayName || table.number }));
+      setPendingReservation(null);
+      return;
+    }
+    
+    // If we're switching tables, move the reservation
+    if (switchingReservationId && !table.isReserved) {
+      updateReservation(switchingReservationId, { tableId: table.id });
+      toast.success(t("tableSwitched", { table: table.displayName || table.number }));
+      setSwitchingReservationId(null);
+      return;
+    }
+    
+    // Normal table click - open modal
     setSelectedTable(table);
     setIsModalOpen(true);
   };
@@ -108,11 +149,56 @@ const Index = () => {
     toast.success(t("logCleared"));
   };
 
+  const handleCreatePendingReservation = (data: PendingReservationData) => {
+    setPendingReservation(data);
+    toast.success(t("pendingReservation") + " - " + t("pendingReservationMsg"));
+  };
+
+  const handleSwitchTable = (reservationId: string) => {
+    setSwitchingReservationId(reservationId);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
       <main className="container mx-auto px-4 py-6">
+        {/* Pending/Switching Reservation Banner */}
+        {(pendingReservation || switchingReservationId) && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`mb-4 p-4 rounded-lg flex items-center justify-between ${
+              pendingReservation ? "bg-warning/20 border border-warning" : "bg-primary/20 border border-primary"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Users className="w-5 h-5" />
+              <div>
+                <p className="font-semibold">
+                  {pendingReservation ? t("pendingReservation") : t("switchingTable")}
+                  {pendingReservation && `: ${pendingReservation.guestName} (${pendingReservation.partySize} ${t("guests")})`}
+                  {switchingReservation && `: ${switchingReservation.guestName}`}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {pendingReservation ? t("pendingReservationMsg") : t("switchingTableMsg")}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setPendingReservation(null);
+                setSwitchingReservationId(null);
+              }}
+            >
+              <X className="w-4 h-4 mr-1" />
+              {pendingReservation ? t("cancelPending") : t("cancelSwitch")}
+            </Button>
+          </motion.div>
+        )}
+
         {/* Date & Time Selector & Stats */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -123,6 +209,13 @@ const Index = () => {
           <div className="flex flex-wrap items-center gap-3">
             <DateSelector selectedDate={selectedDate} onDateChange={setSelectedDate} />
             <TimeSelector selectedTime={selectedTime} onTimeChange={setSelectedTime} />
+            <Button
+              onClick={() => setIsPendingModalOpen(true)}
+              className="bg-warning text-warning-foreground hover:bg-warning/90"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              {t("newReservation")}
+            </Button>
           </div>
 
           <div className="flex items-center gap-4">
@@ -251,6 +344,15 @@ const Index = () => {
         onReserve={addReservation}
         onUpdate={updateReservation}
         onCancel={handleCancelReservation}
+        onSwitchTable={handleSwitchTable}
+        selectedDate={selectedDate}
+        selectedTime={selectedTime}
+      />
+
+      <PendingReservationModal
+        isOpen={isPendingModalOpen}
+        onClose={() => setIsPendingModalOpen(false)}
+        onCreatePending={handleCreatePendingReservation}
         selectedDate={selectedDate}
         selectedTime={selectedTime}
       />

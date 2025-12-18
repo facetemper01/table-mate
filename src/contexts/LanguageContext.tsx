@@ -71,7 +71,23 @@ const translations: Translations = {
   "currentlyReserved": { en: "Currently reserved", no: "For øyeblikket reservert" },
   "guestName": { en: "Guest Name", no: "Gjestenavn" },
   "phone": { en: "Phone", no: "Telefon" },
-  "partySize": { en: "Party Size", no: "Antall gjester" },
+  "numberOfGuests": { en: "Number of Guests", no: "Antall gjester" },
+  
+  // Pending Reservation
+  "newReservation": { en: "New Reservation", no: "Ny reservasjon" },
+  "pendingReservation": { en: "Pending Reservation", no: "Ventende reservasjon" },
+  "pendingReservationMsg": { en: "Click on a free table to assign this reservation", no: "Klikk på et ledig bord for å tildele denne reservasjonen" },
+  "guests": { en: "guest(s)", no: "gjest(er)" },
+  "cancelPending": { en: "Cancel Pending", no: "Avbryt ventende" },
+  "assignToTable": { en: "Assign to Table", no: "Tildel til bord" },
+  "reservationAssigned": { en: "Reservation assigned to Table {table}", no: "Reservasjon tildelt bord {table}" },
+  
+  // Table Switching
+  "switchTable": { en: "Switch Table", no: "Bytt bord" },
+  "switchingTable": { en: "Switching table for reservation", no: "Bytter bord for reservasjon" },
+  "switchingTableMsg": { en: "Click on another table to move this reservation", no: "Klikk på et annet bord for å flytte denne reservasjonen" },
+  "cancelSwitch": { en: "Cancel Switch", no: "Avbryt bytte" },
+  "tableSwitched": { en: "Reservation moved to Table {table}", no: "Reservasjon flyttet til bord {table}" },
   "notes": { en: "Notes", no: "Notater" },
   "confirmReservation": { en: "Confirm Reservation", no: "Bekreft reservasjon" },
   "cancelReservation": { en: "Cancel Reservation", no: "Avlys reservasjon" },

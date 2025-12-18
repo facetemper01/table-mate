@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { TableWithStatus, Reservation } from "@/types/reservation";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Users, Calendar, Clock, X, Pencil } from "lucide-react";
+import { Users, Calendar, Clock, X, Pencil, ArrowRightLeft } from "lucide-react";
 import { toast } from "sonner";
 
 interface ReservationModalProps {
@@ -22,6 +23,7 @@ interface ReservationModalProps {
   onReserve: (reservation: Omit<Reservation, "id" | "createdAt">) => void;
   onUpdate: (reservationId: string, updates: Partial<Omit<Reservation, "id" | "createdAt">>) => void;
   onCancel: (reservationId: string) => void;
+  onSwitchTable: (reservationId: string) => void;
   selectedDate: string;
   selectedTime: string;
 }
@@ -33,9 +35,11 @@ export function ReservationModal({
   onReserve,
   onUpdate,
   onCancel,
+  onSwitchTable,
   selectedDate,
   selectedTime,
 }: ReservationModalProps) {
+  const { t } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [isDropIn, setIsDropIn] = useState(false);
   const [formData, setFormData] = useState({
@@ -120,6 +124,12 @@ export function ReservationModal({
     setIsEditing(true);
   };
 
+  const handleSwitchTable = () => {
+    if (!table?.currentReservation) return;
+    onSwitchTable(table.currentReservation.id);
+    onClose();
+  };
+
   if (!table) return null;
 
   const showForm = !table.isReserved || isEditing;
@@ -129,7 +139,7 @@ export function ReservationModal({
       <DialogContent className="sm:max-w-md bg-card border-border">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl flex items-center gap-2">
-            Table {table.number}
+            {t("table")} {table.displayName || table.number}
             <span
               className={`text-sm px-2 py-0.5 rounded-full ${
                 table.isReserved
@@ -137,13 +147,13 @@ export function ReservationModal({
                   : "bg-success/20 text-success"
               }`}
             >
-              {table.isReserved ? "Reserved" : "Available"}
+              {table.isReserved ? t("reserved") : t("available")}
             </span>
           </DialogTitle>
           <DialogDescription className="flex items-center gap-4 text-muted-foreground">
             <span className="flex items-center gap-1">
               <Users className="w-4 h-4" />
-              {table.seats} seats
+              {table.seats} {t("seats")}
             </span>
             <span className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
@@ -159,31 +169,31 @@ export function ReservationModal({
         {table.isReserved && table.currentReservation && !isEditing ? (
           <div className="space-y-4">
             <div className="bg-secondary/50 p-4 rounded-lg space-y-3">
-              <h4 className="font-semibold text-foreground">Current Reservation</h4>
+              <h4 className="font-semibold text-foreground">{t("currentlyReserved")}</h4>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
-                  <span className="text-muted-foreground">Guest:</span>
+                  <span className="text-muted-foreground">{t("guestName")}:</span>
                   <p className="font-medium">{table.currentReservation.guestName}</p>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Time:</span>
+                  <span className="text-muted-foreground">{t("time")}:</span>
                   <p className="font-medium flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {table.currentReservation.time}
                   </p>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Party Size:</span>
-                  <p className="font-medium">{table.currentReservation.partySize} guests</p>
+                  <span className="text-muted-foreground">{t("numberOfGuests")}:</span>
+                  <p className="font-medium">{table.currentReservation.partySize} {t("guests")}</p>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Phone:</span>
+                  <span className="text-muted-foreground">{t("phone")}:</span>
                   <p className="font-medium">{table.currentReservation.guestPhone}</p>
                 </div>
               </div>
               {table.currentReservation.notes && (
                 <div>
-                  <span className="text-muted-foreground text-sm">Notes:</span>
+                  <span className="text-muted-foreground text-sm">{t("notes")}:</span>
                   <p className="text-sm italic">{table.currentReservation.notes}</p>
                 </div>
               )}
@@ -195,17 +205,25 @@ export function ReservationModal({
                 onClick={handleEditClick}
               >
                 <Pencil className="w-4 h-4 mr-2" />
-                Edit Reservation
+                {t("editLayout")}
               </Button>
               <Button
-                variant="destructive"
+                variant="outline"
                 className="flex-1"
-                onClick={handleCancelReservation}
+                onClick={handleSwitchTable}
               >
-                <X className="w-4 h-4 mr-2" />
-                Cancel
+                <ArrowRightLeft className="w-4 h-4 mr-2" />
+                {t("switchTable")}
               </Button>
             </div>
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={handleCancelReservation}
+            >
+              <X className="w-4 h-4 mr-2" />
+              {t("cancelReservation")}
+            </Button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -219,7 +237,7 @@ export function ReservationModal({
                 <Label htmlFor="dropIn" className="cursor-pointer">Drop-in (walk-in guest)</Label>
               </div>
               <div className="col-span-2">
-                <Label htmlFor="guestName">Guest Name {isDropIn ? "(Optional)" : ""}</Label>
+                <Label htmlFor="guestName">{t("guestName")} {isDropIn ? "(Optional)" : ""}</Label>
                 <Input
                   id="guestName"
                   value={formData.guestName}
@@ -232,7 +250,7 @@ export function ReservationModal({
                 />
               </div>
               <div>
-                <Label htmlFor="guestPhone">Phone (Optional)</Label>
+                <Label htmlFor="guestPhone">{t("phone")} (Optional)</Label>
                 <Input
                   id="guestPhone"
                   type="tel"
@@ -245,12 +263,11 @@ export function ReservationModal({
                 />
               </div>
               <div>
-                <Label htmlFor="partySize">Party Size</Label>
+                <Label htmlFor="partySize">{t("numberOfGuests")}</Label>
                 <Input
                   id="partySize"
                   type="number"
                   min={1}
-                  max={table.seats}
                   value={formData.partySize}
                   onChange={(e) =>
                     setFormData({ ...formData, partySize: parseInt(e.target.value) })
@@ -260,7 +277,7 @@ export function ReservationModal({
                 />
               </div>
               <div className="col-span-2">
-                <Label htmlFor="time">Time</Label>
+                <Label htmlFor="time">{t("time")}</Label>
                 <Input
                   id="time"
                   type="time"
@@ -273,7 +290,7 @@ export function ReservationModal({
                 />
               </div>
               <div className="col-span-2">
-                <Label htmlFor="notes">Special Requests (Optional)</Label>
+                <Label htmlFor="notes">{t("notes")} (Optional)</Label>
                 <Textarea
                   id="notes"
                   value={formData.notes}
@@ -294,15 +311,161 @@ export function ReservationModal({
                   className="flex-1"
                   onClick={() => setIsEditing(false)}
                 >
-                  Cancel Edit
+                  {t("cancel")}
                 </Button>
               )}
               <Button type="submit" className={`${isEditing ? 'flex-1' : 'w-full'} bg-primary text-primary-foreground hover:bg-primary/90`}>
-                {isEditing ? "Save Changes" : "Confirm Reservation"}
+                {isEditing ? t("saveChanges") : t("confirmReservation")}
               </Button>
             </div>
           </form>
         )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Separate modal for creating pending reservations (without table)
+interface PendingReservationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onCreatePending: (data: { guestName: string; guestPhone: string; partySize: number; time: string; notes: string; date: string }) => void;
+  selectedDate: string;
+  selectedTime: string;
+}
+
+export function PendingReservationModal({
+  isOpen,
+  onClose,
+  onCreatePending,
+  selectedDate,
+  selectedTime,
+}: PendingReservationModalProps) {
+  const { t } = useLanguage();
+  const [isDropIn, setIsDropIn] = useState(false);
+  const [formData, setFormData] = useState({
+    guestName: "",
+    guestPhone: "",
+    partySize: 2,
+    time: selectedTime,
+    notes: "",
+  });
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        guestName: "",
+        guestPhone: "",
+        partySize: 2,
+        time: selectedTime,
+        notes: "",
+      });
+      setIsDropIn(false);
+    }
+  }, [isOpen, selectedTime]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const guestName = isDropIn && !formData.guestName.trim() ? "Drop-in" : formData.guestName || "Drop-in";
+    onCreatePending({
+      ...formData,
+      guestName,
+      date: selectedDate,
+    });
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md bg-card border-border">
+        <DialogHeader>
+          <DialogTitle className="font-display text-2xl">{t("newReservation")}</DialogTitle>
+          <DialogDescription className="text-muted-foreground">
+            {t("pendingReservationMsg")}
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2 flex items-center gap-2">
+              <Checkbox
+                id="dropInPending"
+                checked={isDropIn}
+                onCheckedChange={(checked) => setIsDropIn(checked === true)}
+              />
+              <Label htmlFor="dropInPending" className="cursor-pointer">Drop-in (walk-in guest)</Label>
+            </div>
+            <div className="col-span-2">
+              <Label htmlFor="guestNamePending">{t("guestName")} {isDropIn ? "(Optional)" : ""}</Label>
+              <Input
+                id="guestNamePending"
+                value={formData.guestName}
+                onChange={(e) =>
+                  setFormData({ ...formData, guestName: e.target.value })
+                }
+                placeholder="Enter guest name"
+                required={!isDropIn}
+                className="bg-secondary/50"
+              />
+            </div>
+            <div>
+              <Label htmlFor="guestPhonePending">{t("phone")} (Optional)</Label>
+              <Input
+                id="guestPhonePending"
+                type="tel"
+                value={formData.guestPhone}
+                onChange={(e) =>
+                  setFormData({ ...formData, guestPhone: e.target.value })
+                }
+                placeholder="+47 XXX XX XXX"
+                className="bg-secondary/50"
+              />
+            </div>
+            <div>
+              <Label htmlFor="partySizePending">{t("numberOfGuests")}</Label>
+              <Input
+                id="partySizePending"
+                type="number"
+                min={1}
+                value={formData.partySize}
+                onChange={(e) =>
+                  setFormData({ ...formData, partySize: parseInt(e.target.value) })
+                }
+                required
+                className="bg-secondary/50"
+              />
+            </div>
+            <div className="col-span-2">
+              <Label htmlFor="timePending">{t("time")}</Label>
+              <Input
+                id="timePending"
+                type="time"
+                value={formData.time}
+                onChange={(e) =>
+                  setFormData({ ...formData, time: e.target.value })
+                }
+                required
+                className="bg-secondary/50"
+              />
+            </div>
+            <div className="col-span-2">
+              <Label htmlFor="notesPending">{t("notes")} (Optional)</Label>
+              <Textarea
+                id="notesPending"
+                value={formData.notes}
+                onChange={(e) =>
+                  setFormData({ ...formData, notes: e.target.value })
+                }
+                placeholder="Any special requests or notes..."
+                className="bg-secondary/50 resize-none"
+                rows={2}
+              />
+            </div>
+          </div>
+          <Button type="submit" className="w-full bg-warning text-warning-foreground hover:bg-warning/90">
+            {t("confirmReservation")}
+          </Button>
+        </form>
       </DialogContent>
     </Dialog>
   );
