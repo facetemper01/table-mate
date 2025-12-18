@@ -332,6 +332,8 @@ interface PendingReservationModalProps {
   onCreatePending: (data: { guestName: string; guestPhone: string; partySize: number; time: string; notes: string; date: string }) => void;
   selectedDate: string;
   selectedTime: string;
+  onDateChange: (date: string) => void;
+  onTimeChange: (time: string) => void;
 }
 
 export function PendingReservationModal({
@@ -340,6 +342,8 @@ export function PendingReservationModal({
   onCreatePending,
   selectedDate,
   selectedTime,
+  onDateChange,
+  onTimeChange,
 }: PendingReservationModalProps) {
   const { t } = useLanguage();
   const [isDropIn, setIsDropIn] = useState(false);
@@ -348,6 +352,7 @@ export function PendingReservationModal({
     guestPhone: "",
     partySize: 2,
     time: selectedTime,
+    date: selectedDate,
     notes: "",
   });
 
@@ -358,11 +363,22 @@ export function PendingReservationModal({
         guestPhone: "",
         partySize: 2,
         time: selectedTime,
+        date: selectedDate,
         notes: "",
       });
       setIsDropIn(false);
     }
-  }, [isOpen, selectedTime]);
+  }, [isOpen, selectedTime, selectedDate]);
+
+  const handleDateChange = (newDate: string) => {
+    setFormData(prev => ({ ...prev, date: newDate }));
+    onDateChange(newDate);
+  };
+
+  const handleTimeChange = (newTime: string) => {
+    setFormData(prev => ({ ...prev, time: newTime }));
+    onTimeChange(newTime);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -370,7 +386,7 @@ export function PendingReservationModal({
     onCreatePending({
       ...formData,
       guestName,
-      date: selectedDate,
+      date: formData.date,
     });
     onClose();
   };
@@ -435,15 +451,24 @@ export function PendingReservationModal({
                 className="bg-secondary/50"
               />
             </div>
-            <div className="col-span-2">
+            <div>
+              <Label htmlFor="datePending">{t("date")}</Label>
+              <Input
+                id="datePending"
+                type="date"
+                value={formData.date}
+                onChange={(e) => handleDateChange(e.target.value)}
+                required
+                className="bg-secondary/50"
+              />
+            </div>
+            <div>
               <Label htmlFor="timePending">{t("time")}</Label>
               <Input
                 id="timePending"
                 type="time"
                 value={formData.time}
-                onChange={(e) =>
-                  setFormData({ ...formData, time: e.target.value })
-                }
+                onChange={(e) => handleTimeChange(e.target.value)}
                 required
                 className="bg-secondary/50"
               />
